@@ -33,12 +33,13 @@ class ssp(amfservice):
         amfservice.__init__(self, svc, home)
         self.svc = svc
         self.home = home
-        self.services = ['/apps/ibm/ssp', '/apps/ibm/ssp2']
+        self.services = ['ssp', 'ssp2']
            
     def start(self):
         """start SSP"""
         status = 0
         for svchome in self.services:
+            svchome = self.home + "/" + svchome
             self.printer.info("service at %s starting " % (svchome))
             status = self.run(svchome+"/bin/startEngine.sh >/dev/null 2>&1", noWait=True)
             if status:
