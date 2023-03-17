@@ -21,6 +21,7 @@
 '''
 from amf import amfservice
 import time
+import os
 
 class ssp(amfservice):
     """
@@ -32,20 +33,23 @@ class ssp(amfservice):
         amfservice.__init__(self, svc, home)
         self.svc = svc
         self.home = home
+        self.services = ['/apps/ibm/ssp', '/apps/ibm/ssp2']
            
     def start(self):
         """start SSP"""
-        self.printer.info("service starting")
-        status = self.run(self.home+"/bin/startEngine.sh >/dev/null 2>&1", noWait=True)
-        if status:
-            self.printer.error("service start failed")   
-        else:
-            while True:
-                time.sleep(3)
-                status = self.run("ps -ef|grep -v grep|grep SSPPlatformFactory|grep -c java", printflag=False)
-                val = self.outbuf[0]
-                if val > 0:
-                    break
+        status = 0
+        for svchome in self.services:
+            self.printer.info("service at %s starting " % (svchome))
+            status = self.run(svchome+"/bin/startEngine.sh >/dev/null 2>&1", noWait=True)
+            if status:
+                self.printer.error("service start failed")
+            else:
+                while True:
+                    time.sleep(3)
+                    status = self.run("ps -ef|grep -v grep|grep %s|grep SSPPlatformFactory|grep -c java" % (svchome), printflag=False)
+                    val = self.outbuf[0]
+                    if val > 0:
+                        break
         return status 
 
     def stop(self):
@@ -63,7 +67,7 @@ class ssp(amfservice):
     
     def status(self):
         """reports status SSP"""
-        self.printer.info("checking service status")
+        self.printer.info("checking service status for engines:%s" % (self.services))
         status = 0
         found = False
         clist = []
@@ -72,18 +76,35 @@ class ssp(amfservice):
         self.run("ps -ef | grep -v grep | grep SSPPlatformFactory| cut -c1-30", printflag=False)
         line = self.outbuf
         pid = 'unknown'
+        proclist = []
         for line in self.outbuf:
             vals = line.split()
             if len(vals) > 1:
-                if vals[0] == 'admin':
+                #if vals[0] == 'admin':
+                user = os.environ['USER']
+                if vals[0] == user:
+                    details = {}
+                    details['pidfile'] = 'NA'
+                    details['pid'] = vals[1]
+                    details['status'] = True
                     found = True
                     pid = vals[1]
-                    break
-        clist.append("%-20s%-12s%-10s" % ('NA', pid, found))
+                    proclist.append(details)
+                    if len(proclist) == len(self.services):
+                        break
         self.printer.info(clist)
-        if found:
-            self.printer.info("SSP is running")
-        else:
-            self.printer.info("SSP is not running")
+        status = 0
+        message = ""
+        for item in proclist:
+            self.printer.info(["%-20s%-12s%-10s" % (item['pidfile'], item['pid'], item['status'])])
+            #clist.append("%-20s%-12s%-10s" % ('NA', pid, found))
+            if item['status'] and status == 0:
+                message = "SSP is running"
+            else:
+                message = "SSP(s) is not running"
+                status = 1
+        if len(proclist) == 0:
+            message = "SSP is not running"
             status = 1
+        self.printer.info([message])
         return status
