@@ -70,7 +70,16 @@ class amfservice:
             process.wait()
             return process.returncode
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # save output in buffer for possible search later
+
+        if self.verbose:
+            while True:
+                output_line = process.stdout.readline()
+                if output_line == '' and process.poll() is not None:
+                    break
+                if output_line:
+                    #print(output_line.strip())
+                    self.printer.info(output_line.strip())
+
         for line in process.stdout:
             line = line.strip()
             if printflag and self.verbose:
