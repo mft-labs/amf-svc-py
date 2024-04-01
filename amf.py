@@ -71,7 +71,7 @@ class amfservice:
             return process.returncode
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        if self.verbose:
+        if printflag and self.verbose:
             while True:
                 output_line = process.stdout.readline()
                 self.outbuf.append(output_line)
