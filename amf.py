@@ -74,6 +74,7 @@ class amfservice:
         if self.verbose:
             while True:
                 output_line = process.stdout.readline()
+                self.outbuf.append(output_line)
                 if output_line == '' and process.poll() is not None:
                     break
                 if output_line:
