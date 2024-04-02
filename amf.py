@@ -71,7 +71,7 @@ class amfservice:
             return process.returncode
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        if printflag and self.verbose:
+        if ((self.action!= None and self.action!='status') or printflag) and self.verbose:
             while True:
                 output_line = process.stdout.readline()
                 self.outbuf.append(output_line)
@@ -259,6 +259,7 @@ notes:
             clazz = myclass(svc, self.svclist[svc])
             # perform specified operation on the class
             # get public class methods
+            clazz.action = self.action
             methods = myclass.__dict__
             # check if method is supported
             method = methods.get(command)
@@ -297,6 +298,7 @@ notes:
         elif command == 'list':
             status = self.do_list(service)
         else:
+            self.action = command
             status = self.do_command(command, service)
         if command != 'help':
             text = 'FAILED'
