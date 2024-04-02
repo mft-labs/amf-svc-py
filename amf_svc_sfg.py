@@ -112,7 +112,8 @@ class sfg(amfservice):
             found = False
             for line in self.outbuf:
                 vals = line.split()
-                if vals[1] == pid:
+                #if vals[1] == pid:
+                if len(vals)>1 and vals[1] == pid:
                     found = True
                     break
             clist.append('%-50s%-12s%-10s' % (fname, pid, found))
